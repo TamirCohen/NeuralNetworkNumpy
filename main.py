@@ -19,7 +19,7 @@ class NeuralNetwork():
     
     def update_weights(self, errors, layers):
         for index, (layer, error) in enumerate(zip(layers[:-1], errors[1:])):
-            self.weights[index] -= self.training_rate * np.matmul(np.transpose(error), layer)
+            self.weights[index] -= self.training_rate * np.matmul(np.transpose(error), self._add_bias_neruon(layer))
     
     def _add_bias_neruon(self, layer):
         return np.c_[layer, np.ones(layer.shape[0])]
@@ -32,8 +32,9 @@ class NeuralNetwork():
         # Seperating the case for the last layers and the other layers.
         errors = [self._calculate_error(layers[-1], (layers[-1] - expected_outputs[:, np.newaxis]))]
 
-        for (weight, layer) in reversed(list(zip(self.weights, layers[1:]))):
-            error_term = np.matmul(errors[0], np.delete(weight, -1, 1))
+        for (weight, layer) in reversed(list(zip(self.weights, layers[:-1]))):
+            non_bias_weights = weight[:,:-1]
+            error_term = np.matmul(errors[0], non_bias_weights)
             error = np.multiply(self.activation_derivative(layer), error_term)
             errors.insert(0, error)
         return errors
