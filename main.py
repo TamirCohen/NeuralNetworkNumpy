@@ -1,9 +1,9 @@
-from matplotlib.pyplot import axis
 import numpy as np
 import itertools
-from functools import reduce
+import matplotlib.pyplot as plt
 
 class NeuralNetwork():
+    ITERATION_NUMBER = 2000
     def __init__(self, layers_dimensions, training_rate=2) -> None:
         self.layers_dimensions = layers_dimensions
         self.layer_number = len(self.layers_dimensions)
@@ -13,10 +13,16 @@ class NeuralNetwork():
     
     def train(self, inputs, expected_outputs):
         self.init_weights()
-        layers = self.forward_propegation(inputs)
-        errors = self.backward_propegation(layers, expected_outputs)
-        self.update_weights(errors, layers)
-    
+        outputs_error = []
+        for _ in range(self.ITERATION_NUMBER):
+            layers = self.forward_propegation(inputs)
+            outputs_error.append(self._calculate_results_error(expected_outputs, layers[-1]))
+            errors = self.backward_propegation(layers, expected_outputs)
+            self.update_weights(errors, layers)
+        plt.plot(outputs_error)
+        return layers[-1], self.weights
+
+
     def update_weights(self, errors, layers):
         for index, (layer, error) in enumerate(zip(layers[:-1], errors[1:])):
             self.weights[index] -= self.training_rate * np.matmul(np.transpose(error), self._add_bias_neruon(layer))
@@ -26,6 +32,9 @@ class NeuralNetwork():
     
     def _calculate_error(self, layer, error_term):
         return np.multiply(self.activation_derivative(layer), error_term)
+
+    def _calculate_results_error(self, expected_outputs, outputs):
+        return np.sum(np.square(expected_outputs[:, np.newaxis] - outputs)) / 8
 
     def backward_propegation(self, layers, expected_outputs):
         #TODO check what about the bias - are we using it properly?
